@@ -1,5 +1,6 @@
 from typing import List, Optional
-from pydantic import BaseSettings, validator, EmailStr, AnyHttpUrl
+from pydantic import validator, EmailStr, AnyHttpUrl
+from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Leymax POS System"
@@ -8,12 +9,19 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     
     # CORS Settings
-    BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = ["http://localhost:3000"]  # Frontend URL
+    BACKEND_CORS_ORIGINS: List[str] = [
+        "http://localhost:3000",  # React default
+        "http://127.0.0.1:3000",
+        "http://localhost:5173",  # Vite default
+        "http://127.0.0.1:5173",
+        "http://localhost",
+        "http://127.0.0.1"
+    ]
     
-    # Database Settings
-    DATABASE_URL: str = "mysql://root:@localhost/leymax_webpos"
+    # Database Settings - XAMPP MySQL default configuration
+    DATABASE_URL: str = "mysql+pymysql://root:@localhost:3306/leymax_webpos"
     
-    # JWT Settings
+    # Security Settings
     SECRET_KEY: str = "your-secret-key-here"  # Change in production
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
     
