@@ -1,54 +1,73 @@
-from typing import List, Optional
+from typing import List, Optional, Any, Dict, Union
 from sqlalchemy.orm import Session
 
 from app.crud.base import CRUDBase
-from app.models.company import Company, Store
-from app.schemas.company import CompanyCreate, CompanyUpdate, StoreCreate, StoreUpdate
+from app.models.company import Company, Store, CompanyType, StoreType
+from app.schemas.register import CompanyCreate, StoreCreate
 
-class CRUDCompany(CRUDBase[Company, CompanyCreate, CompanyUpdate]):
+class CRUDCompany(CRUDBase[Company, CompanyCreate, CompanyCreate]):
     def get_by_name(self, db: Session, *, name: str) -> Optional[Company]:
         return db.query(Company).filter(Company.name == name).first()
-
-    def get_with_stores(self, db: Session, *, id: int) -> Optional[Company]:
-        return db.query(Company).filter(Company.id == id).first()
-
-class CRUDStore(CRUDBase[Store, StoreCreate, StoreUpdate]):
-    def get_by_code(self, db: Session, *, code: str) -> Optional[Store]:
-        return db.query(Store).filter(Store.code == code).first()
-
+    
+    def create_with_store(
+        self, 
+        db: Session, 
+        *, 
+        company_in: CompanyCreate,
+        store_in: StoreCreate
+    ) -> Company:
+        # Create company
+        db_company = Company(
+            name=company_in.name,
+            type=company_in.type,
+            description=company_in.description,
+            address=company_in.address,
+            phone=company_in.phone,
+            email=company_in.email,
+            logo_url=company_in.logo_url
+        )
+        db.add(db_company)
+        db.flush()  # Get company ID without committing
+        
+        # Create main store
+        db_store = Store(
+            company_id=db_company.id,
+            name=store_in.name,
+            type=store_in.type,
+            address=store_in.address,
+            phone=store_in.phone,
+            email=store_in.email
+        )
+        db.add(db_store)
+        db.commit()
+        db.refresh(db_company)
+        return db_company
+    
+    def create_store(
+        self,
+        db: Session,
+        *,
+        company_id: int,
+        store_in: StoreCreate,
+        parent_store_id: Optional[int] = None
+    ) -> Store:
+        db_store = Store(
+            company_id=company_id,
+            parent_store_id=parent_store_id,
+            name=store_in.name,
+            type=store_in.type,
+            address=store_in.address,
+            phone=store_in.phone,
+            email=store_in.email
+        )
+        db.add(db_store)
+        db.commit()
+        db.refresh(db_store)
+        return db_store
+    
     def get_company_stores(
-        self, db: Session, *, company_id: int, skip: int = 0, limit: int = 100
+        self, db: Session, *, company_id: int
     ) -> List[Store]:
-        return (
-            db.query(Store)
-            .filter(Store.company_id == company_id)
-            .offset(skip)
-            .limit(limit)
-            .all()
-        )
-
-    def get_sub_stores(
-        self, db: Session, *, parent_store_id: int, skip: int = 0, limit: int = 100
-    ) -> List[Store]:
-        return (
-            db.query(Store)
-            .filter(Store.parent_store_id == parent_store_id)
-            .offset(skip)
-            .limit(limit)
-            .all()
-        )
-
-    def get_main_stores(
-        self, db: Session, *, company_id: int, skip: int = 0, limit: int = 100
-    ) -> List[Store]:
-        return (
-            db.query(Store)
-            .filter(Store.company_id == company_id)
-            .filter(Store.parent_store_id == None)  # noqa
-            .offset(skip)
-            .limit(limit)
-            .all()
-        )
+        return db.query(Store).filter(Store.company_id == company_id).all()
 
 crud_company = CRUDCompany(Company)
-crud_store = CRUDStore(Store)
