@@ -20,12 +20,15 @@ class Company(Base):
     phone = Column(String(20))
     email = Column(String(100))
     logo_url = Column(String(255))
+    tax_number = Column(String(50))
+    registration_number = Column(String(50))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
     # Relationships
-    stores = relationship("Store", back_populates="company")
-    users = relationship("User", back_populates="company")
+    stores = relationship("Store", back_populates="company", cascade="all, delete-orphan")
+    users = relationship("User", back_populates="company", cascade="all, delete-orphan")
+    courses = relationship("Course", back_populates="company", cascade="all, delete-orphan")
 
 class StoreType(str, enum.Enum):
     MAIN = "main"
@@ -49,4 +52,5 @@ class Store(Base):
     company = relationship("Company", back_populates="stores")
     parent_store = relationship("Store", remote_side=[id], backref="sub_stores")
     inventory = relationship("Inventory", back_populates="store")
-    sales = relationship("Sale", back_populates="store")
+    users = relationship("User", back_populates="store")
+    orders = relationship("Order", back_populates="store", cascade="all, delete-orphan")

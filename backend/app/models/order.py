@@ -67,6 +67,7 @@ class OrderItem(Base):
     notes = Column(Text)
     customization = Column(JSON)  # For cake customization options
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
     # Relationships
     order = relationship("Order", back_populates="items")

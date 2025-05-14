@@ -41,6 +41,7 @@ class InventoryMovement(Base):
     reference_type = Column(String(50))
     notes = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
     # Relationships
     inventory = relationship("Inventory", back_populates="movements")
