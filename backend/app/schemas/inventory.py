@@ -8,6 +8,7 @@ class InventoryBase(BaseModel):
     item_id: int
     quantity: float
     unit: str
+    last_counted_at: Optional[datetime] = None
 
 class InventoryCreate(InventoryBase):
     pass
@@ -17,19 +18,18 @@ class InventoryUpdate(InventoryBase):
 
 class Inventory(InventoryBase):
     id: int
-    last_counted_at: Optional[datetime] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class InventoryMovementBase(BaseModel):
     inventory_id: int
+    batch_id: Optional[int] = None
     movement_type: MovementType
     quantity: float
     unit: str
-    batch_id: Optional[int] = None
     reference_id: Optional[int] = None
     reference_type: Optional[str] = None
     notes: Optional[str] = None
@@ -37,12 +37,16 @@ class InventoryMovementBase(BaseModel):
 class InventoryMovementCreate(InventoryMovementBase):
     pass
 
+class InventoryMovementUpdate(InventoryMovementBase):
+    pass
+
 class InventoryMovement(InventoryMovementBase):
     id: int
     created_at: datetime
+    updated_at: Optional[datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class StockTransferBase(BaseModel):
     from_store_id: int

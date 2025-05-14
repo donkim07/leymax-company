@@ -1,27 +1,32 @@
-from typing import Optional, List
-from pydantic import BaseModel, EmailStr, validator
+from typing import Optional
 from datetime import datetime
+from pydantic import BaseModel, EmailStr, validator
 from app.models.user import UserRole
 
+# Shared properties
 class UserBase(BaseModel):
-    company_id: Optional[int] = None
-    store_id: Optional[int] = None
-    email: EmailStr
+    email: Optional[EmailStr] = None
     first_name: Optional[str] = None
     last_name: Optional[str] = None
-    role: UserRole
+    role: Optional[UserRole] = None
     phone: Optional[str] = None
     address: Optional[str] = None
 
+# Properties to receive via API on creation
 class UserCreate(UserBase):
+    email: EmailStr
     password: str
-    
+    role: UserRole
+    company_id: int
+    store_id: Optional[int] = None
+
     @validator('password')
     def validate_password(cls, v):
         if len(v) < 8:
             raise ValueError('Password must be at least 8 characters long')
         return v
 
+# Properties to receive via API on update
 class UserUpdate(UserBase):
     password: Optional[str] = None
 
@@ -31,14 +36,25 @@ class UserUpdate(UserBase):
             raise ValueError('Password must be at least 8 characters long')
         return v
 
-class User(UserBase):
+# Properties shared by models stored in DB
+class UserInDBBase(UserBase):
     id: int
     is_active: bool
     created_at: datetime
     updated_at: Optional[datetime] = None
+    company_id: int
+    store_id: Optional[int] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+# Additional properties to return via API
+class User(UserInDBBase):
+    pass
+
+# Additional properties stored in DB
+class UserInDB(UserInDBBase):
+    password_hash: str
 
 # Token Schemas
 class Token(BaseModel):

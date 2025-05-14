@@ -1,14 +1,42 @@
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, EmailStr, validator
 from datetime import datetime
+from app.models.company import CompanyType, StoreType
 
-# Base Models
+# Store Schemas
+class StoreBase(BaseModel):
+    name: str
+    type: StoreType
+    address: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[EmailStr] = None
+
+class StoreCreate(StoreBase):
+    company_id: Optional[int] = None
+    parent_store_id: Optional[int] = None
+
+class StoreUpdate(StoreBase):
+    pass
+
+class Store(StoreBase):
+    id: int
+    company_id: int
+    parent_store_id: Optional[int] = None
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+# Company Schemas
 class CompanyBase(BaseModel):
     name: str
-    logo_url: Optional[str] = None
-    email: Optional[EmailStr] = None
+    type: CompanyType
+    description: Optional[str] = None
+    address: Optional[str] = None
     phone: Optional[str] = None
-    address: Optional[Dict[str, Any]] = None
+    email: Optional[EmailStr] = None
+    logo_url: Optional[str] = None
     tax_number: Optional[str] = None
     registration_number: Optional[str] = None
     settings: Optional[Dict[str, Any]] = None
@@ -24,42 +52,10 @@ class Company(CompanyBase):
     id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
+    stores: List[Store] = []
 
     class Config:
-        orm_mode = True
-
-# Store Schemas
-class StoreBase(BaseModel):
-    company_id: int
-    parent_store_id: Optional[int] = None
-    name: str
-    code: str
-    store_type: str
-    email: Optional[EmailStr] = None
-    phone: Optional[str] = None
-    address: Optional[Dict[str, Any]] = None
-    is_active: bool = True
-    settings: Optional[Dict[str, Any]] = None
-
-    @validator('store_type')
-    def validate_store_type(cls, v):
-        if v not in ['main', 'sub']:
-            raise ValueError('store_type must be either "main" or "sub"')
-        return v
-
-class StoreCreate(StoreBase):
-    pass
-
-class StoreUpdate(StoreBase):
-    pass
-
-class Store(StoreBase):
-    id: int
-    created_at: datetime
-    updated_at: Optional[datetime] = None
-
-    class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Response Models
 class CompanyWithStores(Company):
