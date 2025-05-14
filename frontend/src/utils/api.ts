@@ -8,6 +8,7 @@ const api = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
+    withCredentials: true,  // Important for cookies
 });
 
 // Add token to requests
@@ -17,6 +18,8 @@ api.interceptors.request.use((config) => {
         config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
+}, (error) => {
+    return Promise.reject(error);
 });
 
 // Handle 401 responses
