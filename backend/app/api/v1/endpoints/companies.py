@@ -31,7 +31,7 @@ def read_companies(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
     limit: int = 100,
-    current_user: schemas.user.User = Depends(deps.get_current_user),
+    current_user: schemas.user.User = Depends(deps.get_current_admin_user),
 ) -> Any:
     """
     Retrieve companies.
@@ -112,3 +112,22 @@ def read_stores(
     return crud.crud_store.get_company_stores(
         db=db, company_id=company_id, skip=skip, limit=limit
     )
+
+@router.delete("/{company_id}", response_model=schemas.company.Company)
+def delete_company(
+    *,
+    db: Session = Depends(deps.get_db),
+    company_id: int,
+    current_user = Depends(deps.get_current_admin_user)
+) -> Any:
+    """
+    Delete company.
+    """
+    company = crud.crud_company.get(db=db, id=company_id)
+    if not company:
+        raise HTTPException(
+            status_code=404,
+            detail="Company not found"
+        )
+    company = crud.crud_company.remove(db=db, id=company_id)
+    return company
